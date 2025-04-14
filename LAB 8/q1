@@ -1,0 +1,131 @@
+#include <pthread.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+int sum = 0;
+
+void *runner(void *parameters){
+       int i, upper = *((int *)parameters);
+       if (upper > 0){
+            for (i = 1; i<= upper; i++)
+                   sum = sum + i;
+       }
+       pthread_exit(0);
+}
+
+int main(int argc, char *argv[]){
+       pthread_t threadID;
+       pthread_attr_t attributes;
+       int num = 10;
+
+       if (argc > 1){
+            num = atoi(argv[1]);
+        }
+       
+       pthread_attr_init(&attributes);
+       pthread_create(&threadID, &attributes, runner, &num);
+       pthread_join(threadID, NULL);
+       printf("sum=%d\n" , sum);
+       exit(0);
+}
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <pthread.h>
+#include <time.h>
+
+#define SIZE 10000000  // 10 million elements
+#define NUM_THREADS 10
+
+typedef struct {
+    float *A, *B, *C;
+    size_t start, end;
+} ThreadData;
+
+void* add_arrays(void* arg) {
+    ThreadData* data = (ThreadData*) arg;
+    for (size_t i = data->start; i < data->end; i++) {
+        data->C[i] = data->A[i] + data->B[i];
+    }
+    return NULL;
+}
+
+int main() {
+    float *A, *B, *C;
+    A = (float*) malloc(SIZE * sizeof(float));
+    B = (float*) malloc(SIZE * sizeof(float));
+    C = (float*) malloc(SIZE * sizeof(float));
+
+    for (size_t i = 0; i < SIZE; i++) {
+        A[i] = 1.0f;
+        B[i] = 2.0f;
+    }
+
+    pthread_t threads[NUM_THREADS];
+    ThreadData thread_data[NUM_THREADS];
+    size_t chunk_size = SIZE / NUM_THREADS;
+
+    clock_t start = clock();
+
+    for (int i = 0; i < NUM_THREADS; i++) {
+        thread_data[i].A = A;
+        thread_data[i].B = B;
+        thread_data[i].C = C;
+        thread_data[i].start = i * chunk_size;
+        thread_data[i].end = (i == NUM_THREADS - 1) ? SIZE : (i + 1) * chunk_size;
+
+        pthread_create(&threads[i], NULL, add_arrays, &thread_data[i]);
+    }
+
+    for (int i = 0; i < NUM_THREADS; i++) {
+        pthread_join(threads[i], NULL);
+    }
+
+    clock_t end = clock();
+    double time_taken = ((double)(end - start)) / CLOCKS_PER_SEC;
+
+    printf("Parallel Execution Time with %d threads: %f seconds\n", NUM_THREADS, time_taken);
+
+    free(A);
+    free(B);
+    free(C);
+
+    return 0;
+}
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+
+#define SIZE 10000000  
+
+int main() {
+    float *A, *B, *C;
+    A = (float*) malloc(SIZE * sizeof(float));
+    B = (float*) malloc(SIZE * sizeof(float));
+    C = (float*) malloc(SIZE * sizeof(float));
+
+   
+    for (size_t i = 0; i < SIZE; i++) {
+        A[i] = 1.0f;
+        B[i] = 2.0f;
+    }
+
+    clock_t start = clock();
+
+    
+    for (size_t i = 0; i < SIZE; i++) {
+        C[i] = A[i] + B[i];
+    }
+
+    clock_t end = clock();
+    double time_taken = ((double)(end - start)) / CLOCKS_PER_SEC;
+
+    printf("Serial Execution Time: %f seconds\n", time_taken);
+
+    
+    free(A);
+    free(B);
+    free(C);
+
+    return 0;
+}
