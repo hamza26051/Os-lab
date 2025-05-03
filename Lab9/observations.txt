@@ -1,0 +1,33 @@
+Code Workout #3 — SIGUSR1 in Threads
+
+1) Compilation & Run
+   Command:
+     gcc -pthread -o sigusr1_threads sigusr1_threads.c
+     ./sigusr1_threads
+
+2) Raw Output
+   Thread 131279431399104: started, waiting for signal…
+   Thread 131279286695616: started, waiting for signal…
+   Thread 131279423006400: started, waiting for signal…
+   Main: sending SIGUSR1 to process
+   Thread 131279434811200 received SIGUSR1
+   Main: sending SIGUSR1 to thread 131279423006400 only
+   Thread 131279423006400 received SIGUSR1
+   Thread 131279423006400: exiting
+
+3) Explanation
+   (a) kill(getpid(), SIGUSR1) delivers SIGUSR1 to one of the threads that has the handler installed.  
+   (b) pthread_kill(th[2], SIGUSR1) delivers SIGUSR1 only to the third thread (ID 131279423006400).  
+   (c) Only the third thread printed its “exiting” message before the program ended, because main returned
+       immediately after the second signal.
+
+4) Answers to In-Lab Questions
+   (a) Compiled and ran as above; observed exactly one thread catching the process-wide signal,
+       then the targeted thread catching the thread-specific signal.
+   (b) With the handler registered in main(), both kill() and pthread_kill() work: process-wide signals
+       go to some handler-installed thread, and pthread_kill() goes to the specified thread.
+   (c) If you move the signal(SIGUSR1, sigusr1_handler) call into each worker(), each thread still
+       independently installs and catches the signals directed at it.
+
+— End of observations —
+
